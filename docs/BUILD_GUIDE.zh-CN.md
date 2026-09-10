@@ -1,8 +1,6 @@
 # RP2040 Mini TXT Reader 制作指南（中文）
 
-一个基于 **YD-RP2040（16MB 闪存版）** 与 **1.8 寸 ST7735 TFT 屏幕** 的超低成本便携 TXT 阅读器，运行于 **CircuitPython 9.x**。本指南带你从选件、接线、组装到烧录固件、排查故障，完整做出一台可单手阅读的"三明治"设备。
-
----
+本指南按**真实制作时序**编排：**选型 → 烧录固件（先让板子能跑）→ 接线 → 组装 → 通电检查 → 传书使用 → 故障排查**。烧录只需要主控板 + USB 线，无需等焊接完成，因此放在最前面——先验证板子是好的，再动手焊，能省去大量排障时间。
 
 ## 一、硬件选型说明（为什么是这套组合）
 
@@ -38,7 +36,56 @@
 
 ---
 
-## 二、接线详表
+## 二、烧录固件与依赖库（开工第一步）
+
+只需主控板 + Type-C 数据线。**先让板子能跑起来，验证硬件是好的，再开始焊接。**
+
+### 1. 烧录 CircuitPython 固件
+
+1. 按住 YD-RP2040 上的 **BOOT** 键不放。
+2. 用 Type-C 数据线连接电脑，确认连接后松开 BOOT 键 → 弹出名为 **RPI-RP2** 的 U 盘。
+3. 从 CircuitPython 官网下载适用于 Raspberry Pi Pico / YD-RP2040 的 **.uf2** 固件文件。
+4. 将 `.uf2` 直接拖入 RPI-RP2 U 盘。
+5. 传输完成板子自动重启，电脑重新出现名为 **CIRCUITPY** 的 U 盘（总容量约 15MB），烧录完成。
+
+### 2. 安装依赖库
+
+在 CIRCUITPY 根目录创建 **lib** 文件夹，放入以下依赖（必须严格符合层级）：
+
+```
+CIRCUITPY/
+├── code.py
+├── font.bdf                 # 中文字体（根目录）
+├── book.txt                 # UTF-8 编码小说（根目录）
+└── lib/
+    ├── adafruit_st7735r.mpy        # 屏幕底层驱动（单个文件）
+    └── adafruit_display_text/      # 文本排版库（整个文件夹）
+        ├── __init__.mpy
+        ├── label.mpy
+        └── ...
+```
+
+macOS 终端拷贝命令：
+
+```sh
+# 解压 display-text 库包（文件名以实际下载为准）
+unzip ~/Downloads/adafruit-circuitpython-display-text-9.x-mpy-5.0.5.zip -d ~/Downloads/
+
+# 拷贝驱动与文本库到设备
+cp ~/Downloads/adafruit_st7735r.mpy /Volumes/CIRCUITPY/lib/
+cp -r ~/Downloads/adafruit-circuitpython-display-text-9.x-mpy-5.0.5/lib/adafruit_display_text /Volumes/CIRCUITPY/lib/
+```
+
+> 拷贝完成后主控板会自动重启并加载。
+
+### 3. 放入主程序与测试
+
+- 把本仓库根目录的 `code.py` 复制到盘根目录（保存瞬间自动运行）；`examples/` 里有红屏测试、图片显示、π 输出三个演示脚本。
+- **建议先跑 `examples/color_test.py`（红屏测试）验证屏幕通信**，再进入焊接组装环节。
+
+---
+
+## 三、接线详表
 
 ### 电源系统接线
 
@@ -82,7 +129,7 @@
 
 ---
 
-## 三、组装步骤（三明治结构）
+## 四、组装步骤（三明治结构）
 
 层叠顺序：**屏幕（底层，屏朝外）→ 缓冲层+电池（中层）→ YD-RP2040 + TP4056（顶层）**。
 
@@ -144,7 +191,7 @@
 
 ---
 
-## 四、通电前安全检查
+## 五、通电前安全检查
 
 拨动电源开关通电前，务必确认：
 
@@ -155,94 +202,12 @@
 
 ---
 
-## 五、CircuitPython 固件烧录
+## 六、传书与日常使用
 
-1. 按住 YD-RP2040 上的 **BOOT** 键不放。
-2. 用 Type-C 数据线连接电脑，确认连接后松开 BOOT 键 → 弹出名为 **RPI-RP2** 的 U 盘。
-3. 从 CircuitPython 官网下载适用于 Raspberry Pi Pico / YD-RP2040 的 **.uf2** 固件文件。
-4. 将 `.uf2` 直接拖入 RPI-RP2 U 盘。
-5. 传输完成板子自动重启，电脑重新出现名为 **CIRCUITPY** 的 U 盘（总容量约 15MB），烧录完成。
-
----
-
-## 六、依赖库安装
-
-在 CIRCUITPY 根目录创建 **lib** 文件夹，放入以下依赖（必须严格符合层级）：
-
-```
-CIRCUITPY/
-├── code.py
-├── font.bdf                 # 中文字体（根目录）
-├── book.txt                 # UTF-8 编码小说（根目录）
-└── lib/
-    ├── adafruit_st7735r.mpy        # 屏幕底层驱动（单个文件）
-    └── adafruit_display_text/      # 文本排版库（整个文件夹）
-        ├── __init__.mpy
-        ├── label.mpy
-        └── ...
-```
-
-### macOS 终端拷贝命令
-
-```sh
-# 解压 display-text 库包（文件名以实际下载为准）
-unzip ~/Downloads/adafruit-circuitpython-display-text-9.x-mpy-5.0.5.zip -d ~/Downloads/
-
-# 拷贝驱动与文本库到设备
-cp ~/Downloads/adafruit_st7735r.mpy /Volumes/CIRCUITPY/lib/
-cp -r ~/Downloads/adafruit-circuitpython-display-text-9.x-mpy-5.0.5/lib/adafruit_display_text /Volumes/CIRCUITPY/lib/
-```
-
-> 拷贝完成后主控板会自动重启并加载。
-
-### 文本阅读核心代码示例（CircuitPython 9.x 语法）
-
-```python
-import board
-import busio
-import digitalio
-import displayio
-import fourwire
-import time
-from adafruit_st7735r import ST7735R
-from adafruit_display_text import label
-from adafruit_bitmap_font import bitmap_font
-
-displayio.release_displays()
-spi = busio.SPI(clock=board.GP10, MOSI=board.GP11)
-display_bus = fourwire.FourWire(
-    spi, command=board.GP13, chip_select=board.GP14, reset=board.GP12)
-display = ST7735R(display_bus, width=128, height=160, bgr=True)
-
-btn_next = digitalio.DigitalInOut(board.GP16)
-btn_next.direction = digitalio.Direction.INPUT
-btn_next.pull = digitalio.Pull.UP
-btn_prev = digitalio.DigitalInOut(board.GP17)
-btn_prev.direction = digitalio.Direction.INPUT
-btn_prev.pull = digitalio.Pull.UP
-
-font = bitmap_font.load_font("/font.bdf")
-text_group = displayio.Group()
-text_area = label.Label(font, text=" 系统初始化中 ...", color=0xFFFFFF, x=0, y=8)
-text_group.append(text_area)
-display.root_group = text_group
-
-def read_page(pos):
-    with open("/book.txt", "r", encoding="utf-8") as f:
-        f.seek(pos)
-        text_area.text = f.read(110)
-        return f.tell()
-
-current_pos = read_page(0)
-while True:
-    if not btn_next.value:
-        time.sleep(0.2)
-        current_pos = read_page(current_pos)
-    if not btn_prev.value:
-        time.sleep(0.2)
-        current_pos = max(0, current_pos - 220)
-        current_pos = read_page(current_pos)
-```
+1. 用 Type-C 线把设备插上电脑，弹出 `CIRCUITPY` U 盘。
+2. 将 UTF-8 编码的 `book.txt`（建议在盘根目录覆盖同名文件）拖入，拔线。
+3. 拨动电源开关开机，按「下页」键从首屏开始阅读。
+4. 充电时把 Type-C 线插在 **TP4056 的 Type-C 口**（不是主控板的口）。
 
 ---
 
@@ -261,7 +226,7 @@ while True:
 
 ### 专项一：白光不显示（数据/库问题）
 
-先做纯色测试，把硬件问题和图片问题剥离：
+先做纯色测试（即 `examples/color_test.py`），把硬件问题和图片问题剥离：
 
 ```python
 import board, busio, displayio, fourwire
@@ -302,9 +267,7 @@ while True:
 - **缺少 `adafruit_display_text`**：下载对应 **9.x** 的 Library Bundle（`adafruit-circuitpython-display-text-9.x-mpy-*.zip`），解压后把整个 `adafruit_display_text` **文件夹** `cp -r` 到 `CIRCUITPY/lib/`。注意它是文件夹不是单文件。
 - **芯片变体**：部分 1.8" 屏用 ST7789 驱动，若代码无报错但仍白光，需换对应驱动库尝试。
 
----
-
-## 八、查看报错（让主控板"开口说话"）
+### 查看报错（让主控板"开口说话"）
 
 1. 下载安装 Thonny（thonny.org）。
 2. 右下角解释器切到 **CircuitPython (通用)**，选对 YD-RP2040 的端口。
