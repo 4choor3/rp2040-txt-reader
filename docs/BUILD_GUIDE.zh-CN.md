@@ -1,0 +1,315 @@
+# RP2040 Mini TXT Reader 制作指南（中文）
+
+一个基于 **YD-RP2040（16MB 闪存版）** 与 **1.8 寸 ST7735 TFT 屏幕** 的超低成本便携 TXT 阅读器，运行于 **CircuitPython 9.x**。本指南带你从选件、接线、组装到烧录固件、排查故障，完整做出一台可单手阅读的"三明治"设备。
+
+---
+
+## 一、硬件选型说明（为什么是这套组合）
+
+本项目追求三条硬性目标：**极低成本（整机 < 30 元）**、**免编译/免重烧即可传书**、**超薄可单手握持**。
+
+### 1. 主控方案对比
+
+| 主控方案 | 架构 | 本地存储 | PC 传书方式 | 成本 | 备注 |
+|----------|------|----------|-------------|------|------|
+| **YD-RP2040 16MB** | ARM Cortex-M0+ 双核 | 板载 16MB SPI Flash | 原生模拟 U 盘（拖拽） | 约 9–11 元 | **最终选用**。刷入 CircuitPython 后插电脑即识别为 U 盘，改代码、存 TXT 都只需复制粘贴，无需编译。 |
+| CH32V203C8T6 + 外挂 Flash | RISC-V 单核 | 外挂 16MB Flash | 模拟 U 盘/串口 | 约 7–9 元 | 需自画板或飞线存储芯片，且要写 C 语言 USB 底层驱动，门槛极高。 |
+| STM32F103C8T6 核心板 | ARM Cortex-M3 | 外接 SD 卡 | 拔卡用读卡器 | 约 12–15 元 | 板载容量极小(64KB)，必须外加 SD 卡模块，体积大且无法做板载 U 盘。 |
+
+**结论**：RP2040 自带的原生 USB 控制器 + CircuitPython 的 USB MSC 协议，把"传书"变成插线拖文件，体验最佳、开发最简单。
+
+### 2. 屏幕方案对比
+
+| 屏幕型号 | 尺寸/分辨率 | 价格 | 适合阅读的原因 | 缺点 |
+|----------|-------------|------|----------------|------|
+| 12864 单色点阵屏 (ST7565/ST7567) | ~2.0–2.4" (128×64) | 约 10–15 元 | 复古护眼，黄绿底黑字/灰底黑字 | 分辨率低、颗粒感明显、接线较多 |
+| 1.3" OLED (SH1106) | 1.3" (128×64) | 约 7–10 元 | 纯黑底白字、自发光、夜间极佳；I2C 仅 4 线 | 物理尺寸太小、长时盯看易疲劳 |
+| **1.8" TFT (ST7735)** | 1.8" (128×160) | 约 7–10 元 | **性价比最高**。代码中设黑底白字即可当高分辨率单色屏用，一屏显示汉字更多 | 背光常亮略耗电、强光下反光 |
+
+**结论**：1.8" ST7735 虽是彩屏，但产业链成熟、价格甚至低于很多单色屏，且 128×160 能少按几次翻页键。代码中将文本色设为 `0xFFFFFF`、背景 `0x000000` 即可当黑白屏使用。
+
+### 3. 关键选型纠错（务必照做）
+
+- **屏幕必须买"8 针带 PCB 底板模块"**，不要买裸屏。裸屏用 0.5mm 间距 FPC 排线，手工根本焊不上；带底板模块是标准 **2.54mm 通孔**，可穿线飞线。
+- **YD-RP2040 必须买"未焊接排针（散件）"版本**。已焊排针会增厚约 1cm，破坏超薄三明治结构。
+- **电池选 503035 聚合物锂电池**（厚 5.0mm、宽 30mm、长 35mm），扁平小巧，刚好藏进 1.8 寸屏背后。
+- **充电板选 TP4056 Type-C 模块**：自带过充/过放保护，尺寸仅约 15×11mm。
+- 另需：**轻触微动开关 ×2**（翻页）、**SS12d00 拨动开关 ×1**（可选电源总开关）、**30AWG 硅胶特软线**（飞线）。
+
+---
+
+## 二、接线详表
+
+### 电源系统接线
+
+供电链路：**电池 → TP4056 → （拨动开关） → YD-RP2040**
+
+| 起点（元件） | 导线连接至 | 终点（元件） | 说明 |
+|--------------|------------|--------------|------|
+| 电池 红线 (+) | → | TP4056 **B+** | 电池充电输入 |
+| 电池 黑线 (−) | → | TP4056 **B−** | 电池接地 |
+| TP4056 **OUT−** | → | YD-RP2040 **GND** | 全局共地 |
+| TP4056 **OUT+** | → | 拨动开关 引脚 1 | 正极先经过开关 |
+| 拨动开关 引脚 2 | → | YD-RP2040 **Vin** | 开关输出接主控供电 |
+
+> **为什么接 Vin 而不是 3V3？** 锂电池满电 4.2V、没电 3.0V，电压波动。接入 **Vin / VSYS** 后，板载降压稳压器会稳定输出纯净 3.3V。
+>
+> **不加开关也行**：直接把 TP4056 的 **OUT+ → YD-RP2040 Vin** 即可（OUT− → GND 不变）。代价是设备"永远开机"，需断电只能烫掉 Vin 上的线。新手可先不加开关测试连通性，跑通后再剪断串入开关。
+
+### 屏幕模块接线（SPI 接口）
+
+| TFT 屏幕引脚 | 连接至 YD-RP2040 | 作用 |
+|--------------|------------------|------|
+| **VCC** | **3V3** | 屏幕逻辑供电 |
+| **GND** | **GND** | 屏幕接地 |
+| **SCL** (SCK) | **GP10** | SPI 硬件时钟 |
+| **SDA** (MOSI) | **GP11** | SPI 硬件数据 |
+| **RES** (RST) | **GP12** | 屏幕复位 |
+| **DC** (A0) | **GP13** | 数据/命令切换 |
+| **CS** (CE) | **GP14** | SPI 片选 |
+| **BLK** (LED) | **3V3** | 背光常亮 |
+
+> **只有 1 个 3V3 孔怎么办？** 在屏幕端把 **VCC 与 BLK 短接焊死**，只从 VCC 引出一根线接主控 3V3（最整洁，跨板飞线从 8 根减到 7 根）。也可把两根线同时塞进同一个 3V3 孔焊死。
+
+### 翻页按键接线
+
+按键使用主控板内置上拉电阻，按下时导通 GND 触发低电平。
+
+| 按键 | 引脚 1 | 引脚 2 | 触发逻辑 |
+|------|--------|--------|----------|
+| 下一页 | **GP16** | **GND** | 低电平触发 |
+| 上一页 | **GP17** | **GND** | 低电平触发 |
+
+---
+
+## 三、组装步骤（三明治结构）
+
+层叠顺序：**屏幕（底层，屏朝外）→ 缓冲层+电池（中层）→ YD-RP2040 + TP4056（顶层）**。
+
+### 准备：拆除排针（如收到已焊版）
+
+1. 用斜口钳/尖嘴钳夹碎排针底部的黑色塑料座，使金属针互不相连。
+2. 一手用镊子夹住一根金属针，一手用电烙铁加热背面焊点；锡融化时轻轻一抽拔出。
+3. 用吸锡器吸净孔内残锡，或用牙签趁热捅穿。孔通透后才能穿线飞线。
+4. 若残锡堵死无法清理，可把线头上锡后贴在焊盘表面做"贴片式"焊接，同样极薄。
+
+### 步骤一：屏幕预留引线（游离状态）
+
+1. 剪 8 根约 5cm 的 30AWG 硅胶线。
+2. 分别穿过屏幕底板 8 个孔（VCC、GND、SCL、SDA、RES、DC、CS、BLK）并焊死。
+3. 让 8 根线顺屏幕边缘向外延伸，像 8 根"触须"——暂时不要管它们。
+
+### 步骤二：组装独立电源链路（游离状态）
+
+1. 电池红线焊 TP4056 **B+**，黑线焊 **B−**。（⚠️ 正负极绝对不能短接或接反，否则瞬间烧毁 TP4056 甚至电池鼓包。）
+2. 短线：TP4056 **OUT+** → 拨动开关中间引脚（若不加开关则直接 OUT+ → 主控 Vin）。
+3. 短线：拨动开关侧边引脚 → 主控 **Vin**。
+4. 短线：TP4056 **OUT−** → 主控任意 **GND** 孔。
+
+### 步骤三：物理堆叠组合
+
+1. 在屏幕背面贴好双面胶边缘 + 透明硬塑料隔离片（见下方缓冲层说明）。
+2. 将连着线的电池平贴在硬塑料片上。
+3. 将 YD-RP2040、TP4056 平贴在电池背面。
+4. 此时屏幕引出的 8 根"触须"可顺电池侧边缝隙向上翻折到顶层主控周围。
+
+### 缓冲层（解决屏幕背面元件凸起，防刺穿电池）
+
+屏幕背面常有 LDO、贴片电阻电容甚至 SD 卡槽，凸起 1–2mm，绝不能把软包锂电池直接压上去。
+
+1. 用加厚双面胶（EVA 海绵胶 / 3M VHB，约 2–3mm 厚）剪约 3mm 宽细条，沿屏幕 PCB 背面四边贴一圈，围成"相框"凹槽，**中间留空避开凸起元件**。
+2. 确认胶带高度已超过最高元件；不够则叠贴一层。
+3. **加装防刺穿层**：剪一块与电池同大的透明硬塑料片（手机壳/数据线包装盒）贴在"围墙"上，形成平整坚硬地基，把凸起元件封死在下。
+4. 再用薄双面胶把电池贴在硬塑料片上，主控平贴电池上。
+
+### 步骤四：跨层飞线对接（关键收尾）
+
+把向上翻折的 8 根屏幕线一一对应焊到 YD-RP2040（每焊一根先比划长度、剪掉多余、重新剥皮再焊，确保贴电池边缘不拱起）：
+
+- VCC → 3V3
+- GND → GND
+- SCL → GP10
+- SDA → GP11
+- RES → GP12
+- DC → GP13
+- CS → GP14
+- BLK → 另一个空闲 **3V3**
+
+### 步骤五：侧边按键接入
+
+1. 两个轻触微动开关用热熔胶固定在"三明治"侧边空隙处。
+2. 一根短线把两按键各自一个引脚串联，再引一根线就近接主控 **GND**。
+3. 下一页按键另一引脚 → **GP16**。
+4. 上一页按键另一引脚 → **GP17**。
+
+---
+
+## 四、通电前安全检查
+
+拨动电源开关通电前，务必确认：
+
+- [ ] 所有剪断的金属废线头已清理干净，没有掉进任何电路板缝隙。
+- [ ] 从底板翻上来的导线外皮完好，没有蹭到电路板边缘锋利焊盘导致铜芯外露短路。
+- [ ] 电池与任何金属针/焊点之间已垫绝缘（双面胶/硬塑料片），无刺穿风险。
+- [ ] 建议准备万用表蜂鸣档，通电前测关键引脚两端是否真正导通、相邻引脚是否意外短路。
+
+---
+
+## 五、CircuitPython 固件烧录
+
+1. 按住 YD-RP2040 上的 **BOOT** 键不放。
+2. 用 Type-C 数据线连接电脑，确认连接后松开 BOOT 键 → 弹出名为 **RPI-RP2** 的 U 盘。
+3. 从 CircuitPython 官网下载适用于 Raspberry Pi Pico / YD-RP2040 的 **.uf2** 固件文件。
+4. 将 `.uf2` 直接拖入 RPI-RP2 U 盘。
+5. 传输完成板子自动重启，电脑重新出现名为 **CIRCUITPY** 的 U 盘（总容量约 15MB），烧录完成。
+
+---
+
+## 六、依赖库安装
+
+在 CIRCUITPY 根目录创建 **lib** 文件夹，放入以下依赖（必须严格符合层级）：
+
+```
+CIRCUITPY/
+├── code.py
+├── font.bdf                 # 中文字体（根目录）
+├── book.txt                 # UTF-8 编码小说（根目录）
+└── lib/
+    ├── adafruit_st7735r.mpy        # 屏幕底层驱动（单个文件）
+    └── adafruit_display_text/      # 文本排版库（整个文件夹）
+        ├── __init__.mpy
+        ├── label.mpy
+        └── ...
+```
+
+### macOS 终端拷贝命令
+
+```sh
+# 解压 display-text 库包（文件名以实际下载为准）
+unzip ~/Downloads/adafruit-circuitpython-display-text-9.x-mpy-5.0.5.zip -d ~/Downloads/
+
+# 拷贝驱动与文本库到设备
+cp ~/Downloads/adafruit_st7735r.mpy /Volumes/CIRCUITPY/lib/
+cp -r ~/Downloads/adafruit-circuitpython-display-text-9.x-mpy-5.0.5/lib/adafruit_display_text /Volumes/CIRCUITPY/lib/
+```
+
+> 拷贝完成后主控板会自动重启并加载。
+
+### 文本阅读核心代码示例（CircuitPython 9.x 语法）
+
+```python
+import board
+import busio
+import digitalio
+import displayio
+import fourwire
+import time
+from adafruit_st7735r import ST7735R
+from adafruit_display_text import label
+from adafruit_bitmap_font import bitmap_font
+
+displayio.release_displays()
+spi = busio.SPI(clock=board.GP10, MOSI=board.GP11)
+display_bus = fourwire.FourWire(
+    spi, command=board.GP13, chip_select=board.GP14, reset=board.GP12)
+display = ST7735R(display_bus, width=128, height=160, bgr=True)
+
+btn_next = digitalio.DigitalInOut(board.GP16)
+btn_next.direction = digitalio.Direction.INPUT
+btn_next.pull = digitalio.Pull.UP
+btn_prev = digitalio.DigitalInOut(board.GP17)
+btn_prev.direction = digitalio.Direction.INPUT
+btn_prev.pull = digitalio.Pull.UP
+
+font = bitmap_font.load_font("/font.bdf")
+text_group = displayio.Group()
+text_area = label.Label(font, text=" 系统初始化中 ...", color=0xFFFFFF, x=0, y=8)
+text_group.append(text_area)
+display.root_group = text_group
+
+def read_page(pos):
+    with open("/book.txt", "r", encoding="utf-8") as f:
+        f.seek(pos)
+        text_area.text = f.read(110)
+        return f.tell()
+
+current_pos = read_page(0)
+while True:
+    if not btn_next.value:
+        time.sleep(0.2)
+        current_pos = read_page(current_pos)
+    if not btn_prev.value:
+        time.sleep(0.2)
+        current_pos = max(0, current_pos - 220)
+        current_pos = read_page(current_pos)
+```
+
+---
+
+## 七、常见问题排查
+
+### 故障对照表
+
+| 现象 | 最可能原因 | 解决方法 |
+|------|------------|----------|
+| 屏幕完全漆黑，连底光都没有 | 供电未通 | 检查 VCC、BLK 是否牢固接在 3V3；电池/TP4056 接线是否正确 |
+| 屏幕泛白光/灰光，但无图像 | 数据通信中断 / 缺驱动库 / 图片格式错 | 见下方"白光不显示"专项 |
+| 一保存 code.py，CIRCUITPY 盘就掉线重启 | 代码语法错误或内存溢出 | 图片分辨率未缩到 128×160 会撑爆内存；用 Thonny 看报错 |
+| 红字报错 `ImportError: no module named 'adafruit_st7735r'` | 找不到屏幕驱动库 | 确认 lib 内有 `adafruit_st7735r.mpy`，且层级正确 |
+| 红字报错 `AttributeError: module has no attribute 'FourWire'` | **CP 9.x 兼容性** | 见下方"fourwire 报错"专项 |
+| 红字报错 `ImportError: no module named 'adafruit_display_text'` | 缺文本库 | 用 `cp -r` 把整个 `adafruit_display_text` 文件夹拷入 lib |
+
+### 专项一：白光不显示（数据/库问题）
+
+先做纯色测试，把硬件问题和图片问题剥离：
+
+```python
+import board, busio, displayio, fourwire
+from adafruit_st7735r import ST7735R
+displayio.release_displays()
+spi = busio.SPI(clock=board.GP10, MOSI=board.GP11)
+display_bus = fourwire.FourWire(spi, command=board.GP13, chip_select=board.GP14, reset=board.GP12)
+display = ST7735R(display_bus, width=128, height=160, bgr=True)
+color_bitmap = displayio.Bitmap(128, 160, 1)
+color_palette = displayio.Palette(1)
+color_palette[0] = 0xFF0000
+bg = displayio.TileGrid(color_bitmap, pixel_shader=color_palette, x=0, y=0)
+group = displayio.Group(); group.append(bg); display.root_group = group
+while True:
+    pass
+```
+
+| 屏幕反应 | 诊断 | 下一步 |
+|----------|------|--------|
+| 变纯红 | 硬件 100% 正确，原图格式不达标 | 用画图软件另存 **24位位图 (.bmp)**，分辨率 128×160 |
+| 仍是白光 | 数据线虚焊/断路或引脚接错 | 查 GP10(SCL)、GP11(SDA)、GP12(RES)、GP13(DC)、GP14(CS) 焊点，万用表蜂鸣档测通断 |
+| 彩色雪花/错位 | 驱动库或初始化偏移不匹配 | 调整 `bgr=True` 或加偏移量 |
+
+### 专项二：fourwire 报错（CircuitPython 9.x 兼容性）
+
+屏幕亮白光、控制台报 `AttributeError: module has no attribute 'FourWire'`，这是**纯固件版本兼容问题**，与焊接无关。
+
+| 固件大版本 | 需要导入 | 调用语法 |
+|------------|----------|----------|
+| CircuitPython 8.x 及更旧 | `import displayio` | `displayio.FourWire(...)` |
+| **CircuitPython 9.x 及最新** | `import fourwire` | `fourwire.FourWire(...)` |
+
+**修复**：在 code.py 头部加 `import fourwire`，并把 `displayio.FourWire(...)` 改为 `fourwire.FourWire(...)`。无需重新接线或换驱动。
+
+### 专项三：缺库报错
+
+- **缺少 `adafruit_st7735r`**：确认 `lib/adafruit_st7735r.mpy` 存在，路径不能放在根目录或 `lib/lib/` 嵌套里。
+- **缺少 `adafruit_display_text`**：下载对应 **9.x** 的 Library Bundle（`adafruit-circuitpython-display-text-9.x-mpy-*.zip`），解压后把整个 `adafruit_display_text` **文件夹** `cp -r` 到 `CIRCUITPY/lib/`。注意它是文件夹不是单文件。
+- **芯片变体**：部分 1.8" 屏用 ST7789 驱动，若代码无报错但仍白光，需换对应驱动库尝试。
+
+---
+
+## 八、查看报错（让主控板"开口说话"）
+
+1. 下载安装 Thonny（thonny.org）。
+2. 右下角解释器切到 **CircuitPython (通用)**，选对 YD-RP2040 的端口。
+3. 底部 Shell 连接主控板后，点一下窗口，按 **Ctrl+C** 再按 **Ctrl+D** 软重启，即可看到红色报错。
+
+---
+
+祝组装顺利！有任何问题对照上方排查表逐步排除即可。
