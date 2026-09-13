@@ -49,8 +49,10 @@ CircuitPython 9.x 开机即跑，保存代码自动重载（REPL 启动信息）
 
 运行视频：
 
+https://github.com/user-attachments/assets/76697f93-1d83-48e3-a512-80a10abe46a3
+
 <p align="center">
-  <video src="https://github.com/4choor3/rp2040-txt-reader/releases/download/v1.0/demo.mp4" controls muted preload="metadata" width="320"></video>
+  <a href="https://github.com/4choor3/rp2040-txt-reader/releases/download/v1.0/demo.mp4">▶ 下载完整视频（MP4，787 KB）</a>
 </p>
 
 ## 🚀 快速开始
