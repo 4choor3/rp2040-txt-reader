@@ -47,16 +47,10 @@ CircuitPython 9.x 开机即跑，保存代码自动重载（REPL 启动信息）
   <img src="assets/03-image-viewer.jpg" width="420" alt="成品图片显示效果"/>
 </p>
 
-运行视频（画面预览 + 播放器）：
+运行视频：
 
 <p align="center">
-  <img src="assets/demo-poster.jpg" width="260" alt="运行画面预览"/>
-</p>
-
-https://github.com/user-attachments/assets/76697f93-1d83-48e3-a512-80a10abe46a3
-
-<p align="center">
-  <a href="https://github.com/4choor3/rp2040-txt-reader/releases/download/v1.0/demo.mp4">▶ 下载完整视频（MP4，787 KB）</a>
+  https://github.com/user-attachments/assets/76697f93-1d83-48e3-a512-80a10abe46a3
 </p>
 
 ## 🚀 快速开始
@@ -126,7 +120,6 @@ rp2040-txt-reader/
 │   ├── 01-pi-demo-wiring.jpg
 │   ├── 02-repl-startup.jpg
 │   ├── 03-image-viewer.jpg
-│   ├── demo.gif               # 运行视频 GIF 预览
 │   └── demo.mp4               # 运行视频完整版
 ├── docs/
 │   └── BUILD_GUIDE.zh-CN.md   # 完整中文制作指南（选型→烧录→组装→排查）
