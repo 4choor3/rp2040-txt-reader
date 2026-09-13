@@ -47,11 +47,10 @@ CircuitPython 9.x 开机即跑，保存代码自动重载（REPL 启动信息）
   <img src="assets/03-image-viewer.jpg" width="420" alt="成品图片显示效果"/>
 </p>
 
-运行视频（GIF 自动播放，完整版点链接下载）：
+运行视频：
 
 <p align="center">
-  <img src="assets/demo.gif" width="280" alt="运行视频 GIF 预览"/>
-  <br><a href="assets/demo.mp4">▶ 下载完整视频（MP4，787 KB）</a>
+  <video src="https://github.com/4choor3/rp2040-txt-reader/releases/download/v1.0/demo.mp4" controls muted preload="metadata" width="320"></video>
 </p>
 
 ## 🚀 快速开始
