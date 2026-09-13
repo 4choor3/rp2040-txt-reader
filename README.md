@@ -47,7 +47,11 @@ CircuitPython 9.x 开机即跑，保存代码自动重载（REPL 启动信息）
   <img src="assets/03-image-viewer.jpg" width="420" alt="成品图片显示效果"/>
 </p>
 
-运行视频：
+运行视频（画面预览 + 播放器）：
+
+<p align="center">
+  <img src="assets/demo-poster.jpg" width="260" alt="运行画面预览"/>
+</p>
 
 https://github.com/user-attachments/assets/76697f93-1d83-48e3-a512-80a10abe46a3
 
