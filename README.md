@@ -49,9 +49,7 @@ CircuitPython 9.x 开机即跑，保存代码自动重载（REPL 启动信息）
 
 运行视频：
 
-<p align="center">
-  https://github.com/user-attachments/assets/76697f93-1d83-48e3-a512-80a10abe46a3
-</p>
+https://github.com/user-attachments/assets/76697f93-1d83-48e3-a512-80a10abe46a3
 
 ## 🚀 快速开始
 
