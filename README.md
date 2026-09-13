@@ -27,6 +27,33 @@
 - **电池供电** — 3.7V 锂聚合物电池 + TP4056 充放电保护板，可选拨动开关硬断电。
 - **双按键翻页** — 板载上拉电阻，无需额外元件。
 
+## 📷 实机演示
+
+整套设备：YD-RP2040 主控 + TP4056 充放电板 + 503035 锂电池 + 1.8" ST7735 屏，运行 `examples/pi_2000.py` 滚动输出圆周率：
+
+<p align="center">
+  <img src="assets/01-pi-demo-wiring.jpg" width="420" alt="π 演示与全套硬件接线"/>
+</p>
+
+CircuitPython 9.x 开机即跑，保存代码自动重载（REPL 启动信息）：
+
+<p align="center">
+  <img src="assets/02-repl-startup.jpg" width="320" alt="CircuitPython REPL 启动信息"/>
+</p>
+
+`examples/image_viewer.py` 成品显示 BMP 图片效果：
+
+<p align="center">
+  <img src="assets/03-image-viewer.jpg" width="420" alt="成品图片显示效果"/>
+</p>
+
+运行视频：
+
+<p align="center">
+  <video src="assets/demo.mp4" controls muted width="420"></video>
+  <br><a href="assets/demo.mp4">▶ 视频无法播放时点此下载</a>
+</p>
+
 ## 🚀 快速开始
 
 **前提：主控板烧录好 CircuitPython 9.x 固件、依赖库齐备。** 完整步骤见 [docs/BUILD_GUIDE.zh-CN.md](docs/BUILD_GUIDE.zh-CN.md)。
@@ -90,6 +117,11 @@ rp2040-txt-reader/
 ├── README.md                  # 本文件
 ├── code.py                    # 主程序：TXT 阅读器固件（CircuitPython 9.x）
 ├── LICENSE                    # MIT License
+├── assets/                    # 实机演示图与视频
+│   ├── 01-pi-demo-wiring.jpg
+│   ├── 02-repl-startup.jpg
+│   ├── 03-image-viewer.jpg
+│   └── demo.mp4
 ├── docs/
 │   └── BUILD_GUIDE.zh-CN.md   # 完整中文制作指南（选型→烧录→组装→排查）
 ├── examples/
