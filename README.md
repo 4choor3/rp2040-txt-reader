@@ -12,15 +12,15 @@
 
 用法只有三步：
 
-1. **传书**：插上 Type-C，电脑弹出一个 U 盘（`CIRCUITPY`），把 UTF-8 编码的 `book.txt` 拖进去。
+1. **放文件**：插上 Type-C，电脑弹出一个 U 盘（`CIRCUITPY`），把 UTF-8 编码的 `book.txt` 拖进去。
 2. **开机**：拨动电源开关，屏幕亮起并显示正文。
-3. **阅读**：两个物理按键翻上页 / 下页。
+3. **翻页**：两个物理按键翻上页 / 下页。
 
-换书就是再拖一次文件。**无需编译器、无需 Wi-Fi、无需重新烧录**。
+换文件就是再拖一次。**无需编译器、无需 Wi-Fi、无需重新烧录**。
 
 ## ✨ 特性
 
-- **U 盘式传书** — CircuitPython 把板载 16MB 闪存映射为 USB 磁盘，`book.txt` 直接拖入即可。
+- **插上线就是 U 盘** — CircuitPython 把板载 16MB 闪存映射为 USB 磁盘，`book.txt` 直接拖入即可。
 - **超低成本** — 全套物料 ¥30 以内：主控约 ¥10、屏幕约 ¥8、电池+充放电板约 ¥8、其余小件约 ¥3。
 - **「三明治」结构** — 屏幕 → 缓冲层 → 电池 → 主控板层叠。
 - **完整中文渲染** — 像素 `.bdf` 字体 + `adafruit_bitmap_font`，彩屏当高分辨率黑白屏用。
@@ -61,7 +61,7 @@ https://github.com/user-attachments/assets/76697f93-1d83-48e3-a512-80a10abe46a3
    cp adafruit_st7735r.mpy /Volumes/CIRCUITPY/lib/
    cp -r adafruit_display_text /Volumes/CIRCUITPY/lib/
    ```
-3. **放字体与小说**：`font.bdf`（中文字体）与 `book.txt`（UTF-8）拖入盘根目录。
+3. **放字体与文本**：`font.bdf`（中文字体）与 `book.txt`（UTF-8）拖入盘根目录。
 4. **写入主程序**：把本仓库根目录的 `code.py` 复制到盘根目录，保存瞬间自动运行。
 
 ## 🧰 硬件清单
@@ -133,7 +133,7 @@ rp2040-txt-reader/
 
 从选型到装配的整个过程记录如下。
 
-1. **方案 A — ESP32 + TFT/OLED。** 经典路线：Arduino + `TFT_eSPI` 开发，通过 `ESP32 Sketch Data Upload` 插件或局域网网页传书。性能强，但传书依赖编译环境和 Wi-Fi。
+1. **方案 A — ESP32 + TFT/OLED。** 经典路线：Arduino + `TFT_eSPI` 开发，通过 `ESP32 Sketch Data Upload` 插件或局域网网页传文件。性能强，但传文件依赖编译环境和 Wi-Fi。
 2. **方案 B — ESP32-C3 SuperMini（约 ¥25）。** 硬币大小，自带 Wi-Fi 热点，手机连热点经网页上传 TXT。便宜无线，但仍有 Wi-Fi 和 Arduino 工具链依赖。
 3. **方案 C — ESP32 16MB + I2C OLED。** 为满足「16MB + 黑白屏」需求，用 1.3 寸 OLED + `U8g2` 中文字库。对比度高，但屏幕太小、固件构建繁重。
 4. **方案 D — RP2040 U 盘式（最终选定）。** 彻底抛弃 Wi-Fi。YD-RP2040 原生 USB MSC，刷入 CircuitPython 后直接变 U 盘：改代码、放 TXT 全部复制粘贴，免重新烧录。

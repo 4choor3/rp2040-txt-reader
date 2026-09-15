@@ -8,7 +8,7 @@ RP2040 Mini TXT Reader - 主程序 (文本显示与翻页)
 
 文件结构 (CIRCUITPY 根目录):
     code.py                  <- 本文件
-    book.txt                 <- 要阅读的 UTF-8 文本 (自行放入)
+    book.txt                 <- 要显示的 UTF-8 文本 (自行放入)
     font.bdf                 <- 中文位图字体 (bitmap_font.load_font 加载)
     lib/
         adafruit_st7735r.mpy      <- 屏幕底层驱动
