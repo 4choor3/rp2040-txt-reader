@@ -100,10 +100,13 @@ https://github.com/user-attachments/assets/76697f93-1d83-48e3-a512-80a10abe46a3
 
 运行于 **CircuitPython 9.x**。`CIRCUITPY` 盘的 `lib/` 目录需要：
 
-1. **`adafruit_st7735r.mpy`** — ST7735R 屏幕底层驱动。
-2. **`adafruit_display_text/`** — 文本排版与渲染库（文件夹，不是单文件）。
+1. **`adafruit_st7735r.mpy`** — ST7735R 屏幕底层驱动（[仓库](https://github.com/adafruit/Adafruit_CircuitPython_ST7735R)）。
+2. **`adafruit_display_text/`** — 文本排版与渲染库，文件夹不是单文件（[仓库](https://github.com/adafruit/Adafruit_CircuitPython_Display_Text)）。
+3. **`adafruit_bitmap_font/`** — 加载中文点阵字体用（[仓库](https://github.com/adafruit/Adafruit_CircuitPython_Bitmap_Font)）。
 
-中文渲染需要 **`font.bdf`**（支持中文的 `.bdf` 位图字体）放在盘根目录。
+固件本体在 [adafruit/circuitpython](https://github.com/adafruit/circuitpython)；上面这些库也可以直接下官方合集 **Library Bundle**（[仓库](https://github.com/adafruit/Adafruit_CircuitPython_Bundle)）一次拿齐。
+
+中文渲染需要 **`font.bdf`**（支持中文的 `.bdf` 位图字体）放在盘根目录；中文字形可以用 [文泉驿点阵宋体](https://github.com/AmusementClub/WenQuanYi-Bitmap-Song-TTF) 转换。
 
 > **坑点 — CircuitPython 9.x：** `displayio.FourWire` 已独立为 `fourwire` 模块，必须 `import fourwire` + `fourwire.FourWire(...)`（8.x 旧版才是 `displayio.FourWire`）。
 

@@ -44,7 +44,7 @@
 
 1. 按住 YD-RP2040 上的 **BOOT** 键不放。
 2. 用 Type-C 数据线连接电脑，确认连接后松开 BOOT 键 → 弹出名为 **RPI-RP2** 的 U 盘。
-3. 从 CircuitPython 官网下载适用于 Raspberry Pi Pico / YD-RP2040 的 **.uf2** 固件文件。
+3. 从 **[adafruit/circuitpython](https://github.com/adafruit/circuitpython)** 的 Releases 下载适用于 YD-RP2040 / Raspberry Pi Pico 的 **.uf2** 固件文件。
 4. 将 `.uf2` 直接拖入 RPI-RP2 U 盘。
 5. 传输完成板子自动重启，电脑重新出现名为 **CIRCUITPY** 的 U 盘（总容量约 15MB），烧录完成。
 
@@ -64,6 +64,17 @@ CIRCUITPY/
         ├── label.mpy
         └── ...
 ```
+
+依赖来源（都在 Adafruit 的 GitHub 仓库，也可以直接下官方 **Library Bundle** 合集一次拿齐）：
+
+| 依赖 | 仓库 |
+| --- | --- |
+| `adafruit_st7735r.mpy` | [Adafruit_CircuitPython_ST7735R](https://github.com/adafruit/Adafruit_CircuitPython_ST7735R) |
+| `adafruit_display_text/` | [Adafruit_CircuitPython_Display_Text](https://github.com/adafruit/Adafruit_CircuitPython_Display_Text) |
+| `adafruit_bitmap_font/`（加载中文字体用） | [Adafruit_CircuitPython_Bitmap_Font](https://github.com/adafruit/Adafruit_CircuitPython_Bitmap_Font) |
+| 全部库合集 | [Adafruit_CircuitPython_Bundle](https://github.com/adafruit/Adafruit_CircuitPython_Bundle) |
+
+固件本体在 [adafruit/circuitpython](https://github.com/adafruit/circuitpython)；`font.bdf` 的中文字形可以用 [文泉驿点阵宋体](https://github.com/AmusementClub/WenQuanYi-Bitmap-Song-TTF) 转换。
 
 macOS 终端拷贝命令：
 
