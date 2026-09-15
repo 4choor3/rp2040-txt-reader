@@ -59,7 +59,7 @@
 
 ```
 CIRCUITPY/
-├── code.py                        # 主程序 (TXT 阅读器), 见仓库根目录
+├── code.py                        # 主程序 (文本显示与翻页), 见仓库根目录
 ├── book.txt                       # 要阅读的 UTF-8 文本 (自行放入)
 ├── font.bdf                       # 中文位图字体 (bitmap_font.load_font 加载)
 ├── image.bmp                      # 示例图片 (examples/image_viewer.py 使用, 可选)
