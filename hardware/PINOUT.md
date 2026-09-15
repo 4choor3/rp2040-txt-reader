@@ -1,4 +1,4 @@
-# 硬件接线表 (PINOUT) — RP2040 Mini TXT Reader
+# 硬件接线表 (PINOUT) — RP2040 开发板实践
 
 项目：YD-RP2040 (16MB) + 1.8 寸 ST7735 TFT (128×160, SPI) + 两个翻页按键，运行 CircuitPython 9.x。
 
